@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Waves, Upload, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { addProduct } from "../../../services/add.service";
 
 export default function TambahProductPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -19,14 +20,48 @@ export default function TambahProductPage() {
     }
   };
 
+  // Jalankan import ini di bagian atas file komponen Anda:
+  // import { addProduct } from "./add.service";
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
 
-    // Kumpulkan data untuk dikirim ke backend / Prisma Action Anda
-    const data = Object.fromEntries(formData.entries());
-    console.log("Data Produk Baru:", data);
-    // Jalankan server action Anda di sini (misal: await addProduct(data))
+    const form = e.currentTarget; // simpan referensi
+
+    const formData = new FormData(form);
+
+    const name = formData.get("name") as string;
+    const material = formData.get("material") as string;
+    const category = formData.get("category") as string;
+    const scale = formData.get("scale") as string;
+    const badge = formData.get("badge") as string;
+    const priceRaw = formData.get("price") as string;
+    const stockRaw = formData.get("stock") as string;
+    const yearRaw = formData.get("year") as string;
+    const colorPattern = formData.get("color_pattern") as string;
+
+    const processedData = {
+      name,
+      material: material || undefined,
+      category,
+      scale: scale || undefined,
+      badge: badge || undefined,
+      price: parseInt(priceRaw, 10) || 0,
+      stock: parseInt(stockRaw, 10) || 0,
+      year: yearRaw ? parseFloat(yearRaw) : undefined,
+      colorPattern: colorPattern || undefined,
+      imageUrl: "https://placehold.co/600x600/png",
+    };
+
+    const response = await addProduct(processedData);
+
+    if (response.success) {
+      alert(response.message);
+      form.reset(); // ✅ aman
+      setImagePreview(null);
+    } else {
+      alert("Gagal: " + response.message);
+    }
   };
 
   return (
