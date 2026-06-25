@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -7,9 +6,8 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ShoppingCart } from "lucide-react";
 import { Product } from "@/lib/data";
+import { AddToCartButton } from "./AddToCartButton";
 
 export function ProductCard({ product }: { product: Product }) {
   return (
@@ -22,15 +20,25 @@ export function ProductCard({ product }: { product: Product }) {
           <span className="sr-only">View {product.name}</span>
         </Link>
 
-        {/* Placeholder Image Premium: Menggunakan gradasi radial bawah air yang elegan */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-zinc-950 to-black flex flex-col items-center justify-center p-6 text-center transition-transform duration-700 group-hover:scale-105">
-          <div className="text-[10px] uppercase tracking-[0.3em] text-amber-500/60 mb-2 font-medium">
-            {product.category}
+        {/* Gambar Produk dari Database / Vercel Blob */}
+        {product.image && product.image !== "/placeholder.jpg" ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={product.image}
+            alt={product.name}
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+        ) : (
+          /* Placeholder Image Premium: Gradasi radial bawah air yang elegan */
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-zinc-950 to-black flex flex-col items-center justify-center p-6 text-center transition-transform duration-700 group-hover:scale-105">
+            <div className="text-[10px] uppercase tracking-[0.3em] text-amber-500/60 mb-2 font-medium">
+              {product.category}
+            </div>
+            <div className="text-lg font-light tracking-wide text-zinc-400 max-w-[80%]">
+              {product.name}
+            </div>
           </div>
-          <div className="text-lg font-light tracking-wide text-zinc-400 max-w-[80%]">
-            {product.name}
-          </div>
-        </div>
+        )}
 
         {/* Badge minimalis di pojok atas */}
         <div className="absolute top-4 left-4 z-20 flex flex-col gap-1.5">
@@ -71,9 +79,7 @@ export function ProductCard({ product }: { product: Product }) {
       </CardContent>
 
       <CardFooter className="p-5 pt-0 bg-zinc-950">
-        <Button className="w-full bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-black hover:bg-amber-500 hover:border-amber-500 rounded-none transition-all duration-300 relative overflow-hidden z-20 text-xs font-medium tracking-widest uppercase">
-          <ShoppingCart className="mr-2 h-3.5 w-3.5" /> Add Cart
-        </Button>
+        <AddToCartButton productId={product.id} />
       </CardFooter>
     </Card>
   );

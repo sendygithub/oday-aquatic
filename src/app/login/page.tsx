@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,7 +23,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
-import { Fish } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Fish, Loader2 } from "lucide-react";
+import { loginUser } from "../../../services/auth.service";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Alamat email tidak valid." }),
@@ -32,6 +35,10 @@ const loginSchema = z.object({
 });
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -40,8 +47,29 @@ export default function LoginPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof loginSchema>) {
-    console.log("Login Data:", values);
+  async function onSubmit(values: z.infer<typeof loginSchema>) {
+    setIsLoading(true);
+    setErrorMessage("");
+
+    try {
+      const result = await loginUser(values.email, values.password);
+
+      if (result.success && result.user) {
+        // Redirect based on role
+        if (result.user.role === "admin") {
+          router.push("/dashboard");
+        } else {
+          router.push("/");
+        }
+      } else {
+        setErrorMessage(result.message);
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setErrorMessage("Terjadi kesalahan saat login.");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -71,6 +99,15 @@ export default function LoginPage() {
         </CardHeader>
 
         <CardContent>
+          {/* Error Message */}
+          {errorMessage && (
+            <div className="bg-rose-500/10 border border-rose-500/20 rounded-lg p-3 mb-4">
+              <p className="text-rose-400 text-[11px] text-center">
+                {errorMessage}
+              </p>
+            </div>
+          )}
+
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
@@ -89,6 +126,7 @@ export default function LoginPage() {
                       <Input
                         placeholder="aquarist@odaygallery.com"
                         {...field}
+                        disabled={isLoading}
                         className="bg-zinc-900/40 border-zinc-900 rounded-lg text-zinc-200 text-xs py-4 focus-visible:ring-1 focus-visible:ring-teal-600/40 focus-visible:border-teal-600/40 focus-visible:ring-offset-0 placeholder:text-zinc-700"
                       />
                     </FormControl>
@@ -111,6 +149,7 @@ export default function LoginPage() {
                         type="password"
                         placeholder="••••••••"
                         {...field}
+                        disabled={isLoading}
                         className="bg-zinc-900/40 border-zinc-900 rounded-lg text-zinc-200 text-xs py-4 focus-visible:ring-1 focus-visible:ring-teal-600/40 focus-visible:border-teal-600/40 focus-visible:ring-offset-0 placeholder:text-zinc-700"
                       />
                     </FormControl>
@@ -122,9 +161,17 @@ export default function LoginPage() {
               {/* Tombol Sign In */}
               <Button
                 type="submit"
+                disabled={isLoading}
                 className="w-full bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-teal-600 hover:border-teal-600 hover:text-white rounded-lg text-xs font-medium tracking-widest uppercase py-4.5 transition-all duration-300 mt-2"
               >
-                Masuk Galeri
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                    Memproses...
+                  </>
+                ) : (
+                  "Masuk Galeri"
+                )}
               </Button>
             </form>
           </Form>

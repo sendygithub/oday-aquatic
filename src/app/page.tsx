@@ -1,12 +1,21 @@
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/shared/ProductCard";
+import type { Product } from "@/lib/data";
 
 export default async function Home() {
   const products = await prisma.product.findMany();
 
-  const formattedProducts = products.map((product) => ({
-    ...product,
+  const formattedProducts: Product[] = products.map((product) => ({
+    id: product.id,
+    name: product.name,
+    price: product.price,
+    stock: product.stock,
+    scale: product.scale ?? "",
+    material: product.material ?? "",
+    year: product.year ?? 0,
     image: product.imageUrl ?? "/placeholder.jpg",
+    category: product.category,
+    badge: (product.badge as Product["badge"]) ?? null,
   }));
 
   return (

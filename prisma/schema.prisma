@@ -1,11 +1,26 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("user")
+  orders    Order[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
 model Product {
   id            String   @id @default(cuid())
   name          String
@@ -18,8 +33,45 @@ model Product {
   year          Float?
   colorPattern  String?  @map("color_pattern")
   imageUrl      String?  @map("image_url")
+  orderItems    OrderItem[]
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@map("products")
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique @map("order_number")
+  userId        String?     @map("user_id")
+  user          User?       @relation(fields: [userId], references: [id])
+  customerName  String      @map("customer_name")
+  customerPhone String      @map("customer_phone")
+  customerAddress String    @map("customer_address")
+  customerCity  String      @map("customer_city")
+  customerPostalCode String? @map("customer_postal_code")
+  subtotal      Int
+  shippingCost  Int         @default(15000) @map("shipping_cost")
+  total         Int
+  status        String      @default("pending") // pending, processing, shipped, delivered, cancelled
+  resi          String?
+  items         OrderItem[]
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String  @map("order_id")
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String  @map("product_id")
+  product   Product @relation(fields: [productId], references: [id])
+  name      String
+  price     Int
+  quantity  Int
+  variant   String?
+
+  @@map("order_items")
 }

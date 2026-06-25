@@ -1,9 +1,21 @@
 import Link from "next/link";
-import { ShoppingCart, Search, Waves } from "lucide-react";
+import {
+  ShoppingCart,
+  Search,
+  Waves,
+  User,
+  LogOut,
+  LayoutDashboard,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getSession } from "../../../services/auth.service";
+import { logoutUser } from "../../../services/auth.service";
+import { NavbarClient } from "./NavbarClient";
 
-export function Navbar() {
+export async function Navbar() {
+  const session = await getSession();
+
   return (
     <nav className="sticky top-0 z-50 w-full border-b backdrop-blur-md bg-zinc-950/80 text-white border-zinc-900">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
@@ -32,30 +44,36 @@ export function Navbar() {
         {/* Actions */}
         <div className="flex items-center gap-4">
           {/* Cart Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hover:bg-zinc-900 hover:text-amber-400 rounded-none"
-          >
-            <ShoppingCart className="h-4 w-4 text-zinc-400 hover:text-amber-400" />
-          </Button>
+          <Link href="/cart">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:bg-zinc-900 hover:text-amber-400 rounded-none"
+            >
+              <ShoppingCart className="h-4 w-4 text-zinc-400 hover:text-amber-400" />
+            </Button>
+          </Link>
 
-          {/* Auth Buttons */}
-          <div className="flex items-center gap-1">
-            <Link href="/login">
-              <Button
-                variant="ghost"
-                className="hidden sm:flex text-zinc-400 hover:text-white hover:bg-zinc-900 text-xs font-medium tracking-wider uppercase rounded-none"
-              >
-                Login
-              </Button>
-            </Link>
-            <Link href="/register">
-              <Button className="bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-amber-500 hover:border-amber-500 hover:text-black text-xs font-medium tracking-wider uppercase rounded-none px-5 transition-all duration-300">
-                Register
-              </Button>
-            </Link>
-          </div>
+          {session ? (
+            <NavbarClient user={session} />
+          ) : (
+            /* Auth Buttons - Not Logged In */
+            <div className="flex items-center gap-1">
+              <Link href="/login">
+                <Button
+                  variant="ghost"
+                  className="hidden sm:flex text-zinc-400 hover:text-white hover:bg-zinc-900 text-xs font-medium tracking-wider uppercase rounded-none"
+                >
+                  Login
+                </Button>
+              </Link>
+              <Link href="/register">
+                <Button className="bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-amber-500 hover:border-amber-500 hover:text-black text-xs font-medium tracking-wider uppercase rounded-none px-5 transition-all duration-300">
+                  Register
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </nav>

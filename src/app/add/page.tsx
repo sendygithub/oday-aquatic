@@ -1,17 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Waves, Upload, ArrowLeft } from "lucide-react";
+import { Waves, Upload, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { addProduct } from "../../../services/add.service";
 
 export default function TambahProductPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
 
   // Fungsi untuk pratinjau gambar saat diunggah
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -20,14 +24,10 @@ export default function TambahProductPage() {
     }
   };
 
-  // Jalankan import ini di bagian atas file komponen Anda:
-  // import { addProduct } from "./add.service";
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const form = e.currentTarget; // simpan referensi
-
+    const form = e.currentTarget;
     const formData = new FormData(form);
 
     const name = formData.get("name") as string;
@@ -40,6 +40,39 @@ export default function TambahProductPage() {
     const yearRaw = formData.get("year") as string;
     const colorPattern = formData.get("color_pattern") as string;
 
+    setIsUploading(true);
+
+    let imageUrl = "https://placehold.co/600x600/png";
+
+    // Upload gambar ke Vercel Blob jika ada file yang dipilih
+    if (selectedFile) {
+      try {
+        const uploadFormData = new FormData();
+        uploadFormData.append("file", selectedFile);
+
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: uploadFormData,
+        });
+
+        const uploadResult = await uploadRes.json();
+
+        if (uploadResult.success) {
+          imageUrl = uploadResult.url;
+          setUploadedUrl(uploadResult.url);
+        } else {
+          alert("Gagal mengunggah gambar: " + uploadResult.message);
+          setIsUploading(false);
+          return;
+        }
+      } catch (error) {
+        console.error("Upload error:", error);
+        alert("Gagal mengunggah gambar. Silakan coba lagi.");
+        setIsUploading(false);
+        return;
+      }
+    }
+
     const processedData = {
       name,
       material: material || undefined,
@@ -50,15 +83,19 @@ export default function TambahProductPage() {
       stock: parseInt(stockRaw, 10) || 0,
       year: yearRaw ? parseFloat(yearRaw) : undefined,
       colorPattern: colorPattern || undefined,
-      imageUrl: "https://placehold.co/600x600/png",
+      imageUrl,
     };
 
     const response = await addProduct(processedData);
 
+    setIsUploading(false);
+
     if (response.success) {
       alert(response.message);
-      form.reset(); // ✅ aman
+      form.reset();
       setImagePreview(null);
+      setSelectedFile(null);
+      setUploadedUrl(null);
     } else {
       alert("Gagal: " + response.message);
     }
@@ -116,7 +153,7 @@ export default function TambahProductPage() {
                 </label>
                 <input
                   type="text"
-                  name="material" // Difungsikan sebagai Strain / Spesies Ilmiah
+                  name="material"
                   placeholder="Contoh: Poecilia reticulata"
                   className="w-full bg-zinc-900/50 border border-zinc-900 text-sm px-4 py-3 rounded-none focus:outline-none focus:border-teal-600/50 text-zinc-200 placeholder:text-zinc-700"
                 />
@@ -147,7 +184,7 @@ export default function TambahProductPage() {
                 </label>
                 <input
                   type="text"
-                  name="scale" // Difungsikan sebagai Grade/Kualitas
+                  name="scale"
                   placeholder="Contoh: Pair S+ / Grade A"
                   className="w-full bg-zinc-900/50 border border-zinc-900 text-sm px-4 py-3 rounded-none focus:outline-none focus:border-teal-600/50 text-zinc-200 placeholder:text-zinc-700"
                 />
@@ -208,7 +245,7 @@ export default function TambahProductPage() {
                 </label>
                 <input
                   type="number"
-                  name="year" // Difungsikan sebagai ukuran cm demi tipe data number
+                  name="year"
                   placeholder="Contoh: 4"
                   className="w-full bg-zinc-900/50 border border-zinc-900 text-sm px-4 py-3 rounded-none focus:outline-none focus:border-teal-600/50 text-zinc-200 placeholder:text-zinc-700"
                 />
@@ -259,7 +296,7 @@ export default function TambahProductPage() {
                     Pilih Berkas Gambar
                   </span>
                   <span className="text-[10px] text-zinc-600 mt-1">
-                    Rekomendasi rasio persegi (1:1), maks 2MB
+                    Rekomendasi rasio persegi (1:1), maks 5MB
                   </span>
                   <input
                     type="file"
@@ -271,15 +308,37 @@ export default function TambahProductPage() {
                 </label>
               </div>
             </div>
+
+            {/* Status Upload */}
+            {isUploading && (
+              <div className="flex items-center gap-2 text-xs text-teal-500">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Mengunggah gambar ke Vercel Blob...
+              </div>
+            )}
+            {uploadedUrl && !isUploading && (
+              <div className="flex items-center gap-2 text-xs text-teal-500">
+                <span>✓</span>
+                Gambar berhasil diunggah!
+              </div>
+            )}
           </div>
 
           {/* Tombol Simpan */}
           <div className="pt-4">
             <button
               type="submit"
-              className="w-full md:w-auto bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-teal-600 hover:border-teal-600 hover:text-white rounded-none px-12 py-4 text-xs font-medium tracking-widest uppercase transition-all duration-300"
+              disabled={isUploading}
+              className="w-full md:w-auto bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-teal-600 hover:border-teal-600 hover:text-white rounded-none px-12 py-4 text-xs font-medium tracking-widest uppercase transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-zinc-900 disabled:hover:border-zinc-800 disabled:hover:text-zinc-300"
             >
-              Arsipkan Produk
+              {isUploading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Mengunggah...
+                </span>
+              ) : (
+                "Arsipkan Produk"
+              )}
             </button>
           </div>
         </form>
