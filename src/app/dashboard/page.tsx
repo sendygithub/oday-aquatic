@@ -20,7 +20,7 @@ import {
   ChevronRight,
   RefreshCw,
 } from "lucide-react";
-import { getUserOrders, getOrderCounts } from "../../../services/order.service";
+import { getAllOrders, getOrderCounts } from "../../../services/order.service";
 import type { OrderWithItems } from "../../../services/order.service";
 import { getSession } from "../../../services/auth.service";
 import type { User } from "@/types/auth.type";
@@ -81,7 +81,7 @@ export default function DashboardPage() {
     setIsLoading(true);
     try {
       const [ordersData, countsData, session] = await Promise.all([
-        getUserOrders(),
+        getAllOrders(),
         getOrderCounts(),
         getSession(),
       ]);
