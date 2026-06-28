@@ -21,7 +21,7 @@ export function ProductCard({ product }: { product: Product }) {
         </Link>
 
         {/* Gambar Produk dari Database / Vercel Blob */}
-        {product.image && product.image !== "/placeholder.jpg" ? (
+        {product.image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={product.image}

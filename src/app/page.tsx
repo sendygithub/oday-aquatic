@@ -30,7 +30,7 @@ export default async function Home({
     scale: product.scale ?? "",
     material: product.material ?? "",
     year: product.year ?? 0,
-    image: product.imageUrl ?? "/placeholder.jpg",
+    image: product.imageUrl ?? "",
     category: product.category,
     badge: (product.badge as Product["badge"]) ?? null,
   }));
