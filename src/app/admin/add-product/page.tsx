@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,7 +21,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { PackagePlus, UploadCloud, Save } from "lucide-react";
+import { PackagePlus, UploadCloud, Save, Loader2 } from "lucide-react";
+import { addProduct } from "../../../../services/add.service";
 
 const addProductSchema = z.object({
   name: z
@@ -34,12 +36,16 @@ const addProductSchema = z.object({
     .string()
     .min(2, { message: "Material is required (e.g. Diecast)." }),
   year: z.string().min(4, { message: "Year is required." }),
-  image: z.any(),
 });
 
 type AddProductFormValues = z.infer<typeof addProductSchema>;
 
 export default function AddProductPage() {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
+
   const form = useForm<AddProductFormValues>({
     resolver: zodResolver(addProductSchema),
     defaultValues: {
@@ -53,10 +59,76 @@ export default function AddProductPage() {
     },
   });
 
-  function onSubmit(values: AddProductFormValues) {
-    console.log("New Product Data:", values);
-    alert("Product added successfully!");
-    form.reset();
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  async function onSubmit(values: AddProductFormValues) {
+    setIsUploading(true);
+
+    let imageUrl = "https://placehold.co/600x600/png";
+
+    // Upload gambar jika ada file yang dipilih
+    if (selectedFile) {
+      try {
+        const uploadFormData = new FormData();
+        uploadFormData.append("file", selectedFile);
+
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: uploadFormData,
+        });
+
+        const uploadResult = await uploadRes.json();
+
+        if (uploadResult.success) {
+          imageUrl = uploadResult.url;
+          setUploadedUrl(uploadResult.url);
+        } else {
+          alert("Gagal mengunggah gambar: " + uploadResult.message);
+          setIsUploading(false);
+          return;
+        }
+      } catch (error) {
+        console.error("Upload error:", error);
+        alert("Gagal mengunggah gambar. Silakan coba lagi.");
+        setIsUploading(false);
+        return;
+      }
+    }
+
+    const processedData = {
+      name: values.name,
+      material: values.material,
+      category: values.category,
+      scale: values.scale,
+      price: parseInt(values.price, 10) || 0,
+      stock: parseInt(values.stock, 10) || 0,
+      year: values.year ? parseFloat(values.year) : undefined,
+      imageUrl,
+    };
+
+    const response = await addProduct(processedData);
+
+    setIsUploading(false);
+
+    if (response.success) {
+      alert("Product added successfully!");
+      form.reset();
+      setImagePreview(null);
+      setSelectedFile(null);
+      setUploadedUrl(null);
+    } else {
+      alert("Failed to add product: " + response.message);
+    }
   }
 
   return (
@@ -246,17 +318,60 @@ export default function AddProductPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 flex flex-col items-center">
-              <div className="w-full aspect-square bg-zinc-900 border-2 border-dashed border-zinc-800 rounded-xl flex flex-col items-center justify-center text-zinc-500 hover:border-[#FFD100] hover:text-[#FFD100] transition-colors cursor-pointer group">
-                <UploadCloud className="h-12 w-12 mb-2 group-hover:scale-110 transition-transform" />
-                <p className="text-sm font-medium">Click to upload image</p>
-                <p className="text-xs mt-1">PNG, JPG up to 5MB</p>
-              </div>
+              {/* Image Preview / Upload Area */}
+              <label className="w-full aspect-square bg-zinc-900 border-2 border-dashed border-zinc-800 rounded-xl flex flex-col items-center justify-center text-zinc-500 hover:border-[#FFD100] hover:text-[#FFD100] transition-colors cursor-pointer group overflow-hidden">
+                {imagePreview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <>
+                    <UploadCloud className="h-12 w-12 mb-2 group-hover:scale-110 transition-transform" />
+                    <p className="text-sm font-medium">Click to upload image</p>
+                    <p className="text-xs mt-1">PNG, JPG up to 5MB</p>
+                  </>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+              </label>
+
+              {/* Upload Status */}
+              {isUploading && (
+                <div className="flex items-center gap-2 text-xs text-[#FFD100]">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Uploading image...
+                </div>
+              )}
+              {uploadedUrl && !isUploading && (
+                <div className="flex items-center gap-2 text-xs text-green-500">
+                  <span>✓</span>
+                  Image uploaded successfully!
+                </div>
+              )}
+
               <Button
                 type="submit"
                 form="add-product-form"
-                className="w-full bg-gradient-to-r from-[#FFD100] to-[#FF8E53] hover:from-[#FF8E53] hover:to-[#FF6B8B] text-white font-bold py-6 text-lg tracking-wider"
+                disabled={isUploading}
+                className="w-full bg-gradient-to-r from-[#FFD100] to-[#FF8E53] hover:from-[#FF8E53] hover:to-[#FF6B8B] text-white font-bold py-6 text-lg tracking-wider disabled:opacity-50"
               >
-                <Save className="mr-2 h-5 w-5" /> Save Product
+                {isUploading ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Saving...
+                  </span>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-5 w-5" /> Save Product
+                  </>
+                )}
               </Button>
             </CardContent>
           </Card>

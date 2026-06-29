@@ -25,7 +25,7 @@ export async function Navbar() {
           className="flex items-center gap-2.5 text-2xl font-light tracking-widest uppercase"
         >
           <Waves className="h-5 w-5 text-amber-500/80 tracking-normal not-italic" />
-          <span>Oday</span>
+          <span>SkyFISH</span>
           <span className="text-amber-500 font-medium text-xs tracking-[0.4em] mt-0.5 pl-1 border-l border-zinc-800">
             Gallery
           </span>

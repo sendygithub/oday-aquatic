@@ -86,9 +86,9 @@ export function Footer() {
             Kontak
           </h4>
           <ul className="space-y-2.5 text-xs font-light text-zinc-400">
-            <li>Email: concierge@odaygallery.com</li>
+            <li>Email: babang-Oday@gmail.com</li>
             <li>Telepon: +62 812 9999 0D4Y</li>
-            <li>Alamat: Boutique Aquatics Lt. 2, Jakarta</li>
+            <li>Alamat: Binong Permai, Curug. Tangerang BANTEN</li>
           </ul>
         </div>
       </div>

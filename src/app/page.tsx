@@ -47,18 +47,18 @@ export default async function Home({
             <div className="inline-flex items-center gap-2 px-4 py-1.5 border border-teal-900/40 bg-teal-950/20 rounded-full mb-6">
               <span className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-pulse" />
               <span className="text-[10px] uppercase tracking-[0.2em] text-teal-400 font-medium">
-                Premium Aquatic Collection
+                Wellcome To Premium Aquatic Collection
               </span>
             </div>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-light text-zinc-100 tracking-tight leading-tight mb-6">
-              Oday{" "}
+              SkyFish{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-amber-400 font-normal">
                 Aquatic
               </span>
             </h1>
             <p className="text-sm md:text-base text-zinc-500 font-light max-w-xl mx-auto leading-relaxed">
               Menghadirkan koleksi ikan hias premium dan perlengkapan aquascape
-              pilihan untuk para penghobi akuatik sejati.
+              pilihan untuk para penghobi akuatik indonesia.
             </p>
           </div>
         </div>

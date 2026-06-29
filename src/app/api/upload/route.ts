@@ -1,5 +1,6 @@
-import { put } from "@vercel/blob";
+import { writeFile, mkdir } from "fs/promises";
 import { NextResponse } from "next/server";
+import path from "path";
 
 export async function POST(request: Request) {
   try {
@@ -32,17 +33,23 @@ export async function POST(request: Request) {
     // Generate unique filename
     const timestamp = Date.now();
     const ext = file.name.split(".").pop() || "jpg";
-    const filename = `products/${timestamp}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+    const filename = `${timestamp}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
 
-    // Upload ke Vercel Blob
-    const blob = await put(filename, file, {
-      access: "public",
-      addRandomSuffix: false,
-    });
+    // Simpan ke folder public/uploads
+    const uploadDir = path.join(process.cwd(), "public", "uploads");
+    await mkdir(uploadDir, { recursive: true });
+
+    const filePath = path.join(uploadDir, filename);
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    await writeFile(filePath, buffer);
+
+    // URL yang bisa diakses publik
+    const url = `/uploads/${filename}`;
 
     return NextResponse.json({
       success: true,
-      url: blob.url,
+      url,
       message: "Gambar berhasil diunggah!",
     });
   } catch (error) {

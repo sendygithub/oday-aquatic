@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -19,6 +20,9 @@ import {
   MessageSquare,
   ChevronRight,
   RefreshCw,
+  Plus,
+  Table2,
+  Receipt,
 } from "lucide-react";
 import { getAllOrders, getOrderCounts } from "../../../services/order.service";
 import type { OrderWithItems } from "../../../services/order.service";
@@ -153,6 +157,37 @@ export default function DashboardPage() {
               Rp {totalSpent.toLocaleString("id-ID")}
             </div>
           </div>
+        </div>
+
+        {/* 🔗 QUICK ACTION BUTTONS */}
+        <div className="grid grid-cols-3 gap-3 mb-8">
+          <Link
+            href="/add"
+            className="flex items-center justify-center gap-2 bg-zinc-900/40 border border-zinc-800 hover:border-teal-600/50 hover:bg-teal-950/10 rounded-xl px-4 py-4 transition-all group"
+          >
+            <Plus className="h-4 w-4 text-teal-500 group-hover:scale-110 transition-transform" />
+            <span className="text-xs uppercase tracking-wider text-zinc-400 group-hover:text-teal-400 font-medium">
+              Tambah Produk
+            </span>
+          </Link>
+          <Link
+            href="/tabel"
+            className="flex items-center justify-center gap-2 bg-zinc-900/40 border border-zinc-800 hover:border-teal-600/50 hover:bg-teal-950/10 rounded-xl px-4 py-4 transition-all group"
+          >
+            <Table2 className="h-4 w-4 text-teal-500 group-hover:scale-110 transition-transform" />
+            <span className="text-xs uppercase tracking-wider text-zinc-400 group-hover:text-teal-400 font-medium">
+              Data Produk
+            </span>
+          </Link>
+          <Link
+            href="/transaksi"
+            className="flex items-center justify-center gap-2 bg-zinc-900/40 border border-zinc-800 hover:border-teal-600/50 hover:bg-teal-950/10 rounded-xl px-4 py-4 transition-all group"
+          >
+            <Receipt className="h-4 w-4 text-teal-500 group-hover:scale-110 transition-transform" />
+            <span className="text-xs uppercase tracking-wider text-zinc-400 group-hover:text-teal-400 font-medium">
+              Transaksi
+            </span>
+          </Link>
         </div>
 
         {/* 📊 STATUS OVERVIEW CARDS */}
